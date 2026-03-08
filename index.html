@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <meta name="theme-color" content="#25D366"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+  <meta name="apple-mobile-web-app-title" content="Sohbet"/>
+  <meta name="description" content="Arkadaşlarınla gerçek zamanlı sohbet et"/>
+  <title>Sohbet</title>
+  <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiU29oYmV0IiwiYWJicmV2aWF0ZWRfbmFtZSI6IlNvaGJldCIsInN0YXJ0X3VybCI6Ii4iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsImJhY2tncm91bmRfY29sb3IiOiIjZjBmMmY1IiwidGhlbWVfY29sb3IiOiIjMjVEMzY2IiwiaWNvbnMiOlt7InNyYyI6ImRhdGE6aW1hZ2UvcG5nO2Jhc2U2NCxpVkJPUnc9PSIsInNpemVzIjoiMTkyeDE5MiIsInR5cGUiOiJpbWFnZS9wbmcifV19"/>
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f0f2f5; height: 100dvh; overflow: hidden; }
+    input { font-family: inherit; }
+    button { font-family: inherit; }
+
+    /* HOME */
+    #home {
+      min-height: 100dvh; display: flex; align-items: center;
+      justify-content: center; padding: 20px;
+    }
+    .card {
+      background: #fff; border-radius: 16px; padding: 36px 28px;
+      box-shadow: 0 2px 20px rgba(0,0,0,0.08); width: 100%; max-width: 360px;
+    }
+    .logo {
+      width: 64px; height: 64px; border-radius: 50%; background: #25D366;
+      margin: 0 auto 12px; display: flex; align-items: center; justify-content: center;
+    }
+    .logo svg { width: 32px; height: 32px; }
+    h1 { text-align: center; font-size: 22px; color: #111b21; margin-bottom: 4px; }
+    .subtitle { text-align: center; font-size: 13px; color: #667781; margin-bottom: 28px; }
+    label { font-size: 11px; font-weight: 600; color: #667781; text-transform: uppercase; letter-spacing: 0.5px; }
+    .field { margin-bottom: 14px; }
+    .field input {
+      display: block; width: 100%; margin-top: 6px;
+      padding: 11px 14px; border-radius: 10px; border: 1.5px solid #e9edef;
+      font-size: 15px; outline: none; transition: border-color 0.2s;
+    }
+    .field input:focus { border-color: #25D366; }
+    .room-row { display: flex; gap: 8px; margin-top: 6px; }
+    .room-row input {
+      flex: 1; padding: 11px 14px; border-radius: 10px; border: 1.5px solid #e9edef;
+      font-size: 15px; outline: none; font-family: monospace; letter-spacing: 2px;
+    }
+    .room-row input:focus { border-color: #25D366; }
+    .btn-new {
+      padding: 11px 14px; border-radius: 10px; border: 1.5px solid #e9edef;
+      background: #f8f9fa; cursor: pointer; font-size: 13px;
+      color: #25D366; font-weight: 600; white-space: nowrap;
+    }
+    .btn-join {
+      width: 100%; margin-top: 20px; padding: 13px;
+      background: #25D366; color: #fff; border: none; border-radius: 10px;
+      font-size: 16px; font-weight: 600; cursor: pointer;
+    }
+    .btn-join:disabled { background: #ccc; cursor: default; }
+    .error { color: #e74c3c; font-size: 13px; margin-top: 8px; }
+    .hint { text-align: center; font-size: 12px; color: #aaa; margin-top: 14px; }
+
+    /* CHAT */
+    #chat { display: none; flex-direction: column; height: 100dvh; }
+    .chat-header {
+      background: #fff; padding: 10px 14px;
+      display: flex; align-items: center; gap: 10px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08); flex-shrink: 0; z-index: 10;
+    }
+    .avatar {
+      width: 42px; height: 42px; border-radius: 50%; background: #25D366;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .avatar svg { width: 22px; height: 22px; }
+    .header-info { flex: 1; min-width: 0; }
+    .header-room { font-weight: 700; font-size: 16px; color: #111b21; }
+    .header-online { font-size: 12px; color: #667781; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .btn-copy {
+      background: #f0f2f5; border: none; border-radius: 8px;
+      padding: 7px 10px; cursor: pointer; font-size: 12px;
+      color: #667781; font-weight: 600; flex-shrink: 0;
+    }
+    .btn-copy.copied { background: #e8f9f0; color: #25D366; }
+    .btn-leave {
+      background: #fee; border: none; border-radius: 8px;
+      padding: 7px 10px; cursor: pointer; font-size: 12px;
+      color: #e74c3c; font-weight: 600; flex-shrink: 0;
+    }
+    .messages {
+      flex: 1; overflow-y: auto; padding: 12px 14px 8px;
+      display: flex; flex-direction: column; gap: 3px;
+    }
+    .messages::-webkit-scrollbar { width: 3px; }
+    .messages::-webkit-scrollbar-thumb { background: #ddd; border-radius: 2px; }
+    .sys-msg { text-align: center; margin: 6px 0; }
+    .sys-msg span {
+      background: rgba(255,255,255,0.85); border-radius: 20px;
+      padding: 3px 12px; font-size: 12px; color: #667781;
+    }
+    .msg-row { display: flex; }
+    .msg-row.mine { justify-content: flex-end; }
+    .msg-row.theirs { justify-content: flex-start; }
+    .msg-name { font-size: 12px; font-weight: 600; margin-bottom: 2px; padding-left: 4px; }
+    .bubble {
+      max-width: 72%; min-width: 60px;
+      padding: 8px 11px 5px; box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+    }
+    .mine .bubble { background: #dcf8c6; border-radius: 16px 4px 16px 16px; }
+    .theirs .bubble { background: #fff; border-radius: 4px 16px 16px 16px; }
+    .bubble-text { font-size: 15px; color: #111b21; line-height: 1.4; word-break: break-word; }
+    .bubble-time { font-size: 11px; color: #8696a0; float: right; margin-left: 8px; margin-top: 2px; }
+    .empty-hint { text-align: center; color: #aaa; margin-top: 60px; font-size: 14px; }
+    .typing-row { display: flex; padding: 4px 0; }
+    .typing-bubble {
+      background: #fff; border-radius: 4px 16px 16px 16px;
+      padding: 9px 13px; box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+      font-size: 12px; color: #667781;
+    }
+    .dot { display: inline-block; font-size: 20px; line-height: 1; color: #25D366; animation: bounce 1.2s infinite; }
+    .dot:nth-child(2) { animation-delay: 0.2s; }
+    .dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-5px)} }
+
+    .input-bar {
+      background: #f0f2f5; padding: 8px 12px 12px;
+      display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+    }
+    .input-wrap {
+      flex: 1; background: #fff; border-radius: 24px;
+      display: flex; align-items: center; padding: 8px 16px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+    }
+    .input-wrap input {
+      flex: 1; border: none; outline: none;
+      font-size: 15px; color: #111b21; background: transparent;
+    }
+    .btn-send {
+      width: 46px; height: 46px; border-radius: 50%;
+      background: #25D366; border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; transition: background 0.2s;
+    }
+    .btn-send:disabled { background: #ccc; cursor: default; }
+    .btn-send svg { width: 20px; height: 20px; }
+
+    /* iOS safe area */
+    .input-bar { padding-bottom: max(12px, env(safe-area-inset-bottom)); }
+
+    /* Install banner */
+    #install-banner {
+      display: none; position: fixed; bottom: 0; left: 0; right: 0;
+      background: #25D366; color: white; padding: 14px 16px;
+      align-items: center; gap: 12px; z-index: 999;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.15);
+    }
+    #install-banner p { flex: 1; font-size: 14px; font-weight: 500; }
+    #install-banner button {
+      background: white; color: #25D366; border: none; border-radius: 8px;
+      padding: 8px 14px; font-weight: 700; cursor: pointer; font-size: 13px;
+    }
+    #install-close { background: transparent !important; color: white !important; font-size: 20px; padding: 4px 8px !important; }
+  </style>
+</head>
+<body>
+
+<!-- HOME -->
+<div id="home">
+  <div class="card">
+    <div class="logo">
+      <svg viewBox="0 0 24 24" fill="white"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+    </div>
+    <h1>Sohbet</h1>
+    <p class="subtitle">Arkadaşlarınla bağlan</p>
+
+    <div class="field">
+      <label>Kullanıcı Adın</label>
+      <input id="username-input" type="text" placeholder="Adını gir..." autocomplete="off"/>
+    </div>
+    <div class="field">
+      <label>Oda Kodu</label>
+      <div class="room-row">
+        <input id="room-input" type="text" placeholder="ABCD12" maxlength="8" style="text-transform:uppercase"/>
+        <button class="btn-new" onclick="createRoom()">Yeni Oda</button>
+      </div>
+    </div>
+    <p class="error" id="error-msg"></p>
+    <button class="btn-join" id="join-btn" onclick="joinRoom()">Odaya Katıl</button>
+    <p class="hint">Arkadaşlarına oda kodunu paylaş 💬</p>
+  </div>
+</div>
+
+<!-- CHAT -->
+<div id="chat">
+  <div class="chat-header">
+    <div class="avatar">
+      <svg viewBox="0 0 24 24" fill="white"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+    </div>
+    <div class="header-info">
+      <div class="header-room">Oda: <span id="room-label" style="font-family:monospace;letter-spacing:1px"></span></div>
+      <div class="header-online" id="online-label">...</div>
+    </div>
+    <button class="btn-copy" id="copy-btn" onclick="copyRoom()">📋 Paylaş</button>
+    <button class="btn-leave" onclick="leaveRoom()">Çık</button>
+  </div>
+  <div class="messages" id="messages">
+    <p class="empty-hint">Henüz mesaj yok. İlk mesajı sen at! 👋</p>
+  </div>
+  <div class="input-bar">
+    <div class="input-wrap">
+      <input id="msg-input" type="text" placeholder="Mesaj yaz..." autocomplete="off"
+        oninput="handleTyping(this.value)" onkeydown="if(event.key==='Enter')sendMessage()"/>
+    </div>
+    <button class="btn-send" id="send-btn" onclick="sendMessage()" disabled>
+      <svg viewBox="0 0 24 24" fill="white"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- Install Banner -->
+<div id="install-banner">
+  <p>📱 Ana ekrana ekle, uygulama gibi kullan!</p>
+  <button onclick="installApp()">Ekle</button>
+  <button id="install-close" onclick="closeBanner()">✕</button>
+</div>
+
+<script>
+  // ─── Storage helpers ───────────────────────────────────
+  const store = {
+    async get(key) {
+      try { const r = await window.storage.get(key, true); return r ? JSON.parse(r.value) : null; } catch { return null; }
+    },
+    async set(key, val) {
+      try { await window.storage.set(key, JSON.stringify(val), true); } catch {}
+    }
+  };
+
+  // ─── State ─────────────────────────────────────────────
+  let roomId = '', username = '', pollTimer = null, lastCount = 0;
+  const COLORS = ["#25D366","#0088cc","#e74c3c","#f39c12","#9b59b6","#1abc9c","#e67e22","#3498db"];
+  const getColor = n => COLORS[n.split('').reduce((a,c)=>a+c.charCodeAt(0),0) % COLORS.length];
+  const fmtTime = ts => new Date(ts).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'});
+  const randId = () => Math.random().toString(36).slice(2,8).toUpperCase();
+
+  // ─── Home ──────────────────────────────────────────────
+  function createRoom() {
+    document.getElementById('room-input').value = randId();
+  }
+
+  async function joinRoom() {
+    const uname = document.getElementById('username-input').value.trim();
+    const rid = document.getElementById('room-input').value.trim().toUpperCase();
+    if (!uname || !rid) { document.getElementById('error-msg').textContent = 'Lütfen tüm alanları doldurun.'; return; }
+    document.getElementById('error-msg').textContent = '';
+    document.getElementById('join-btn').disabled = true;
+    document.getElementById('join-btn').textContent = 'Bağlanıyor...';
+    username = uname; roomId = rid;
+    const msgs = await store.get(`chat:${rid}:msgs`) || [];
+    const sysMsg = {id: Date.now(), type:'system', text:`${uname} odaya katıldı`, ts: Date.now()};
+    msgs.push(sysMsg);
+    await store.set(`chat:${rid}:msgs`, msgs);
+    lastCount = msgs.length;
+    showChat(msgs);
+  }
+
+  function showChat(msgs) {
+    document.getElementById('home').style.display = 'none';
+    const chat = document.getElementById('chat');
+    chat.style.display = 'flex';
+    document.getElementById('room-label').textContent = roomId;
+    renderMessages(msgs);
+    startPolling();
+    document.getElementById('join-btn').disabled = false;
+    document.getElementById('join-btn').textContent = 'Odaya Katıl';
+  }
+
+  // ─── Messages ──────────────────────────────────────────
+  function renderMessages(msgs) {
+    const el = document.getElementById('messages');
+    if (!msgs.length) { el.innerHTML = '<p class="empty-hint">Henüz mesaj yok. İlk mesajı sen at! 👋</p>'; return; }
+    el.innerHTML = msgs.map((msg, i) => {
+      if (msg.type === 'system') return `<div class="sys-msg"><span>${msg.text}</span></div>`;
+      const mine = msg.from === username;
+      const prev = msgs[i-1];
+      const showName = !mine && (i===0 || prev?.from !== msg.from || prev?.type==='system');
+      const color = getColor(msg.from);
+      return `<div class="msg-row ${mine?'mine':'theirs'}" style="margin-top:${showName?8:2}px">
+        <div>
+          ${showName ? `<div class="msg-name" style="color:${color}">${msg.from}</div>` : ''}
+          <div class="bubble">
+            <span class="bubble-text">${escHtml(msg.text)}</span>
+            <span class="bubble-time">${fmtTime(msg.ts)}</span>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+    el.scrollTop = el.scrollHeight;
+  }
+
+  function escHtml(t) {
+    return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  async function sendMessage() {
+    const inp = document.getElementById('msg-input');
+    const text = inp.value.trim();
+    if (!text) return;
+    const msg = {id: Date.now(), type:'user', from: username, text, ts: Date.now()};
+    const msgs = await store.get(`chat:${roomId}:msgs`) || [];
+    msgs.push(msg);
+    await store.set(`chat:${roomId}:msgs`, msgs);
+    lastCount = msgs.length;
+    renderMessages(msgs);
+    inp.value = '';
+    document.getElementById('send-btn').disabled = true;
+    const typing = await store.get(`chat:${roomId}:typing`) || {};
+    delete typing[username];
+    await store.set(`chat:${roomId}:typing`, typing);
+  }
+
+  async function handleTyping(val) {
+    document.getElementById('send-btn').disabled = !val.trim();
+    const typing = await store.get(`chat:${roomId}:typing`) || {};
+    if (val.trim()) typing[username] = Date.now();
+    else delete typing[username];
+    await store.set(`chat:${roomId}:typing`, typing);
+  }
+
+  // ─── Polling ───────────────────────────────────────────
+  function startPolling() {
+    if (pollTimer) clearInterval(pollTimer);
+    pollTimer = setInterval(poll, 2000);
+    poll();
+  }
+
+  async function poll() {
+    if (!roomId || !username) return;
+    const msgs = await store.get(`chat:${roomId}:msgs`) || [];
+    if (msgs.length !== lastCount) {
+      lastCount = msgs.length;
+      renderMessages(msgs);
+    }
+    // Presence
+    const now = Date.now();
+    const presence = await store.get(`chat:${roomId}:presence`) || {};
+    presence[username] = now;
+    await store.set(`chat:${roomId}:presence`, presence);
+    const online = Object.entries(presence).filter(([,ts])=>now-ts<8000).map(([n])=>n);
+    document.getElementById('online-label').textContent = online.join(', ') + ' çevrimiçi';
+    // Typing
+    const typing = await store.get(`chat:${roomId}:typing`) || {};
+    const who = Object.entries(typing).filter(([n,ts])=>n!==username&&now-ts<3000).map(([n])=>n);
+    const el = document.getElementById('messages');
+    const existingTyping = el.querySelector('.typing-row');
+    if (who.length > 0) {
+      if (!existingTyping) {
+        const d = document.createElement('div');
+        d.className = 'typing-row';
+        d.innerHTML = `<div class="typing-bubble">${who.join(', ')} yazıyor <span class="dot">·</span><span class="dot">·</span><span class="dot">·</span></div>`;
+        el.appendChild(d);
+        el.scrollTop = el.scrollHeight;
+      }
+    } else if (existingTyping) existingTyping.remove();
+  }
+
+  async function leaveRoom() {
+    const msgs = await store.get(`chat:${roomId}:msgs`) || [];
+    msgs.push({id:Date.now(),type:'system',text:`${username} odadan ayrıldı`,ts:Date.now()});
+    await store.set(`chat:${roomId}:msgs`, msgs);
+    clearInterval(pollTimer);
+    roomId = ''; username = ''; lastCount = 0;
+    document.getElementById('chat').style.display = 'none';
+    document.getElementById('home').style.display = 'flex';
+    document.getElementById('messages').innerHTML = '';
+  }
+
+  function copyRoom() {
+    const text = `Sohbet uygulamasına katıl!\nOda Kodu: ${roomId}`;
+    if (navigator.share) {
+      navigator.share({ title: 'Sohbet', text });
+    } else {
+      navigator.clipboard.writeText(text).catch(()=>{});
+      const btn = document.getElementById('copy-btn');
+      btn.textContent = '✓ Kopyalandı'; btn.classList.add('copied');
+      setTimeout(()=>{ btn.textContent = '📋 Paylaş'; btn.classList.remove('copied'); }, 2000);
+    }
+  }
+
+  // ─── PWA Install ───────────────────────────────────────
+  let deferredPrompt = null;
+
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferredPrompt = e;
+    document.getElementById('install-banner').style.display = 'flex';
+  });
+
+  function installApp() {
+    if (deferredPrompt) { deferredPrompt.prompt(); deferredPrompt = null; }
+    closeBanner();
+  }
+
+  function closeBanner() {
+    document.getElementById('install-banner').style.display = 'none';
+  }
+
+  // iOS hint
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.navigator.standalone;
+  if (isIOS) {
+    const b = document.getElementById('install-banner');
+    b.style.display = 'flex';
+    b.querySelector('p').textContent = '📱 Ana ekrana eklemek için: Paylaş → Ana Ekrana Ekle';
+    b.querySelector('button:first-of-type').style.display = 'none';
+  }
+
+  // Register SW inline
+  if ('serviceWorker' in navigator) {
+    const swCode = `
+      self.addEventListener('install', e => self.skipWaiting());
+      self.addEventListener('activate', e => clients.claim());
+      self.addEventListener('fetch', e => e.respondWith(fetch(e.request).catch(()=>new Response('Çevrimdışı'))));
+    `;
+    const blob = new Blob([swCode], {type:'application/javascript'});
+    navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{});
+  }
+</script>
+</body>
+</html>
